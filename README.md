@@ -27,6 +27,31 @@ The application runs with administrative privileges to manage all necessary tech
 
 ---
 
+
+## 📸 Screenshots
+
+<p align="center">
+  <em>Main window with all configuration options.</em><br>
+  <img src="assets/main-window.png" alt="Main Window" width="600">
+</p>
+
+<p align="center">
+  <em>The form for creating a new SQL user.</em><br>
+  <img src="assets/create-user-form.png" alt="Create User Form" width="500">
+</p>
+
+<p align="center">
+  <em>The form for deleting a user, with a dropdown list of existing users.</em><br>
+  <img src="assets/delete-user-form.png" alt="Delete User Form" width="500">
+</p>
+
+<p align="center">
+  <em>Final log output showing a successful operation and connection details.</em><br>
+  <img src="assets/success-log.png" alt="Success Log" width="700">
+</p>
+
+---
+
 ## 🛠️ How to Use
 
 1.  **Run as Administrator:** Right-click on `SQL-QuickSetup.exe` and select "Run as administrator". (The application will request administrative privileges automatically.)

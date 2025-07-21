@@ -1,6 +1,7 @@
 <div align="right">
   <b><a href="README.md">English</a></b>
 </div>
+
 # SQL-Hızlı Kurulum (SQL-QuickSetup)
 
  <!-- Buraya bir logo URL'si ekleyebilirsiniz -->
@@ -27,6 +28,29 @@ Program, yönetici hakları ile çalışarak gerekli tüm teknik ayarları (TCP/
 
 ---
 
+## 📸 Ekran Görüntüleri
+
+<p align="center">
+  <em>Tüm yapılandırma seçeneklerini içeren ana pencere.</em><br>
+  <img src="assets/main-window.png" alt="Ana Pencere" width="600">
+</p>
+
+<p align="center">
+  <em>Yeni bir SQL kullanıcısı oluşturma formu.</em><br>
+  <img src="assets/create-user-form.png" alt="Kullanıcı Oluşturma Formu" width="500">
+</p>
+
+<p align="center">
+  <em>Mevcut kullanıcıların bir listeden seçilerek silindiği form.</em><br>
+  <img src="assets/delete-user-form.png" alt="Kullanıcı Silme Formu" width="500">
+</p>
+
+<p align="center">
+  <em>Başarılı bir işlemi ve bağlantı detaylarını gösteren nihai işlem günlüğü.</em><br>
+  <img src="assets/success-log.png" alt="Başarılı İşlem Günlüğü" width="700">
+</p>
+
+---
 ## 🛠️ Nasıl Kullanılır?
 
 1.  **Yönetici Olarak Çalıştırın:** `SQL-QuickSetup.exe` dosyasına sağ tıklayın ve "Yönetici olarak çalıştır" seçeneğini seçin. (Program, yönetici haklarını otomatik olarak ister.)
