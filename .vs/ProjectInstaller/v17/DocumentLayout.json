@@ -3,24 +3,24 @@
   "WorkspaceRootPath": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|c:\\users\\ethem\\source\\repos\\projectinstaller\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|c:\\users\\ethem\\source\\repos\\projectinstaller\\sqlconfigurationhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:sqlconfigurationhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|c:\\users\\ethem\\source\\repos\\projectinstaller\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|c:\\users\\ethem\\source\\repos\\projectinstaller\\createuserform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\createuserform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:createuserform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|c:\\users\\ethem\\source\\repos\\projectinstaller\\createuserform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\createuserform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:createuserform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{102DB344-BEFA-4EF2-ABA5-CFF5A7245D61}|ProjectInstaller.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,42 +30,40 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "CreateUserForm.cs",
               "DocumentMoniker": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\CreateUserForm.cs",
               "RelativeDocumentMoniker": "CreateUserForm.cs",
               "ToolTip": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\CreateUserForm.cs",
               "RelativeToolTip": "CreateUserForm.cs",
-              "ViewState": "AgIAAI4AAAAAAAAAAAAAAJMAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAIMAAAAAAAAAAAAuwJ8AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-21T13:01:53.244Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-21T13:01:53.244Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "CreateUserForm.cs [Tasar\u0131m]",
               "DocumentMoniker": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\CreateUserForm.cs",
               "RelativeDocumentMoniker": "CreateUserForm.cs",
               "ToolTip": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\CreateUserForm.cs [Tasar\u0131m]",
               "RelativeToolTip": "CreateUserForm.cs [Tasar\u0131m]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-21T12:59:27.086Z",
-              "EditorCaption": " [Tasar\u0131m]"
+              "WhenOpened": "2025-07-21T12:59:27.086Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\Form1.cs",
               "RelativeDocumentMoniker": "Form1.cs",
               "ToolTip": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\Form1.cs",
               "RelativeToolTip": "Form1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAADgAAAAAAAAAAAAcwD0AAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-21T12:58:28.681Z",
               "EditorCaption": ""
@@ -78,14 +76,14 @@
               "RelativeDocumentMoniker": "SqlConfigurationHelper.cs",
               "ToolTip": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\SqlConfigurationHelper.cs",
               "RelativeToolTip": "SqlConfigurationHelper.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADABAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAANwBAAAAAAAAAAAuwPUBAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-21T12:51:36.499Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "Form1.cs [Tasar\u0131m]",
               "DocumentMoniker": "C:\\Users\\ethem\\source\\repos\\ProjectInstaller\\Form1.cs",
               "RelativeDocumentMoniker": "Form1.cs",

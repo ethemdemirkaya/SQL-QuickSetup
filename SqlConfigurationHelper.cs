@@ -3,9 +3,13 @@ using NetFwTypeLib;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.ServiceProcess;
 using System.Threading.Tasks;
-using System.Net.Http;
 
 namespace ProjectInstaller
 {
@@ -149,38 +153,61 @@ namespace ProjectInstaller
             logAction($"'{serviceName}' servisi başarıyla yeniden başlatıldı.");
         }
 
+        // GÜNCELLENDİ: Metot artık protokol türünü de alabiliyor (TCP veya UDP).
         /// <summary>
-        /// Windows Güvenlik Duvarı'nda belirtilen port için gelen kuralı oluşturur.
+        /// Windows Güvenlik Duvarı'nda belirtilen port ve protokol için gelen kuralı oluşturur.
         /// </summary>
-        public static void OpenFirewallPort(string ruleName, int port, Action<string> logAction)
+        /// <param name="ruleName">Kuralın adı</param>
+        /// <param name="port">Açılacak port numarası</param>
+        /// <param name="logAction">Loglama için kullanılacak metot</param>
+        /// <param name="protocol">"TCP" veya "UDP". Varsayılan olarak "TCP"dir.</param>
+        public static void OpenFirewallPort(string ruleName, int port, Action<string> logAction, string protocol = "TCP")
         {
-            Type fwPolicy2Type = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
-            INetFwPolicy2 fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(fwPolicy2Type);
-
-            foreach (INetFwRule rule in fwPolicy2.Rules)
+            try
             {
-                if (rule.Name == ruleName)
+                Type fwPolicy2Type = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
+                INetFwPolicy2 fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(fwPolicy2Type);
+
+                // Kural daha önce var mı diye kontrol et
+                foreach (INetFwRule rule in fwPolicy2.Rules)
                 {
-                    logAction($"'{ruleName}' isminde bir güvenlik duvarı kuralı zaten mevcut.");
-                    return;
+                    if (rule.Name == ruleName)
+                    {
+                        logAction($"'{ruleName}' isminde bir güvenlik duvarı kuralı zaten mevcut. İşlem atlandı.");
+                        return;
+                    }
                 }
+
+                Type fwRuleType = Type.GetTypeFromProgID("HNetCfg.FWRule");
+                INetFwRule newRule = (INetFwRule)Activator.CreateInstance(fwRuleType);
+
+                newRule.Name = ruleName;
+                newRule.Description = $"SQL Server için {protocol} port erişimi (Otomatik oluşturuldu).";
+
+                // Gelen protokole göre doğru değeri ata
+                if (protocol.ToUpper() == "UDP")
+                {
+                    newRule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
+                }
+                else
+                {
+                    newRule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP;
+                }
+
+                newRule.LocalPorts = port.ToString();
+                newRule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
+                newRule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN;
+                newRule.Enabled = true;
+                newRule.Grouping = "SQL Server Otomasyon";
+                newRule.Profiles = fwPolicy2.CurrentProfileTypes;
+
+                fwPolicy2.Rules.Add(newRule);
+                logAction($"'{ruleName}' güvenlik duvarı kuralı (Port: {port}, Protokol: {protocol}) başarıyla oluşturuldu.");
             }
-
-            Type fwRuleType = Type.GetTypeFromProgID("HNetCfg.FWRule");
-            INetFwRule newRule = (INetFwRule)Activator.CreateInstance(fwRuleType);
-
-            newRule.Name = ruleName;
-            newRule.Description = "SQL Server için TCP port erişimi (Otomatik oluşturuldu).";
-            newRule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP;
-            newRule.LocalPorts = port.ToString();
-            newRule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-            newRule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN;
-            newRule.Enabled = true;
-            newRule.Grouping = "SQL Server Otomasyon";
-            newRule.Profiles = fwPolicy2.CurrentProfileTypes;
-
-            fwPolicy2.Rules.Add(newRule);
-            logAction($"'{ruleName}' güvenlik duvarı kuralı (Port: {port}) başarıyla oluşturuldu.");
+            catch (Exception ex)
+            {
+                throw new Exception($"Güvenlik duvarı kuralı '{ruleName}' oluşturulurken hata: " + ex.Message);
+            }
         }
 
         private static string GetInstanceIdFromInstanceName(string instanceName)
@@ -309,6 +336,181 @@ namespace ProjectInstaller
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+        // YENİ METOT: Bilgisayarın aktif LAN IP adresini bulur.
+        /// <summary>
+        /// Bilgisayarın aktif ve çalışan (Wireless veya Ethernet) ağ bağdaştırıcısının IPv4 adresini bulur.
+        /// </summary>
+        public static string GetLocalIpAddress()
+        {
+            try
+            {
+                var activeInterface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(
+                    ni => (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
+                          ni.OperationalStatus == OperationalStatus.Up &&
+                          ni.GetIPProperties().GatewayAddresses.Any());
+
+                if (activeInterface != null)
+                {
+                    var ipProperty = activeInterface.GetIPProperties().UnicastAddresses.FirstOrDefault(
+                        ip => ip.Address.AddressFamily == AddressFamily.InterNetwork);
+
+                    if (ipProperty != null)
+                    {
+                        return ipProperty.Address.ToString();
+                    }
+                }
+            }
+            catch { /* Hata durumunda fallback'e devam et */ }
+
+            // Fallback yöntemi
+            return Dns.GetHostEntry(Dns.GetHostName())
+                      .AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?
+                      .ToString() ?? "127.0.0.1";
+        }
+
+
+        // YENİ METOT: SQL Server kimlik doğrulama modunu Mixed Mode'a ayarlar.
+        /// <summary>
+        /// Belirtilen SQL Server örneğinin kimlik doğrulama modunu 'SQL Server and Windows Authentication (Mixed Mode)' olarak ayarlar.
+        /// </summary>
+        public static void SetMixedModeAuthentication(string instanceName, Action<string> logAction)
+        {
+            string instanceId = GetInstanceIdFromInstanceName(instanceName);
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                throw new Exception($"'{instanceName}' için örnek ID'si (Instance ID) bulunamadı.");
+            }
+
+            string keyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer";
+            using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+            using (var key = hklm.OpenSubKey(keyPath, true)) // Yazma izniyle aç
+            {
+                if (key == null) throw new Exception("SQL Server için Registry anahtarı bulunamadı.");
+
+                // LoginMode = 1 (Windows Auth Only), LoginMode = 2 (Mixed Mode)
+                key.SetValue("LoginMode", 2, RegistryValueKind.DWord);
+                logAction("SQL Server kimlik doğrulama modu 'Mixed Mode' olarak ayarlandı.");
+            }
+        }
+
+        // GÜNCELLENDİ: Metodun adı ve işlevi genişletildi. Artık portu 1433'e sabitliyor.
+        /// <summary>
+        /// SQL Server TCP/IP protokolünü aktifleştirir, portu 1433'e sabitler ve ilgili servisi yeniden başlatır.
+        /// </summary>
+        public static void ConfigureTcpIpAndRestartService(string instanceName, Action<string> logAction)
+        {
+            string instanceId = GetInstanceIdFromInstanceName(instanceName);
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                throw new Exception($"'{instanceName}' için örnek ID'si (Instance ID) bulunamadı.");
+            }
+
+            string tcpKeyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer\SuperSocketNetLib\Tcp";
+            using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+            {
+                // 1. TCP/IP Protokolünü etkinleştir
+                using (var key = hklm.OpenSubKey(tcpKeyPath, true))
+                {
+                    if (key == null) throw new Exception("TCP/IP için Registry anahtarı bulunamadı.");
+                    key.SetValue("Enabled", 1, RegistryValueKind.DWord);
+                    logAction("SQL Server TCP/IP protokolü aktifleştirildi.");
+                }
+
+                // 2. Dinamik portları kapatıp portu 1433'e sabitle
+                string ipAllKeyPath = tcpKeyPath + @"\IPAll";
+                using (var keyIpAll = hklm.OpenSubKey(ipAllKeyPath, true))
+                {
+                    if (keyIpAll == null) throw new Exception("TCP/IP 'IPAll' ayarları bulunamadı.");
+                    keyIpAll.SetValue("TcpDynamicPorts", "", RegistryValueKind.String); // Dinamik portu boşalt
+                    keyIpAll.SetValue("TcpPort", "1433", RegistryValueKind.String);     // Sabit portu 1433 yap
+                    logAction("TCP/IP portu 1433 olarak sabitlendi. Dinamik portlar kapatıldı.");
+                }
+            }
+
+            // 3. Değişikliklerin geçerli olması için servisi yeniden başlat
+            string serviceName = GetSqlServiceName(instanceName);
+            logAction($"'{serviceName}' servisi yeniden başlatılıyor...");
+            ServiceController service = new ServiceController(serviceName);
+            if (service.Status != ServiceControllerStatus.Stopped)
+            {
+                service.Stop();
+                service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+            }
+            service.Start();
+            service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
+            logAction($"'{serviceName}' servisi başarıyla yeniden başlatıldı.");
+        }
+        // YENİ METOT: Kimlik doğrulama modunu sadece Windows'a geri çevirir.
+        /// <summary>
+        /// Belirtilen SQL Server örneğinin kimlik doğrulama modunu 'Windows Authentication Only' olarak ayarlar.
+        /// </summary>
+        public static void SetWindowsAuthOnlyMode(string instanceName, Action<string> logAction)
+        {
+            string instanceId = GetInstanceIdFromInstanceName(instanceName);
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                throw new Exception($"'{instanceName}' için örnek ID'si (Instance ID) bulunamadı.");
+            }
+
+            string keyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer";
+            using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+            using (var key = hklm.OpenSubKey(keyPath, true))
+            {
+                if (key == null) throw new Exception("SQL Server için Registry anahtarı bulunamadı.");
+
+                // LoginMode = 1 (Windows Auth Only)
+                key.SetValue("LoginMode", 1, RegistryValueKind.DWord);
+                logAction("SQL Server kimlik doğrulama modu 'Windows Authentication Only' olarak ayarlandı.");
+            }
+        }
+
+        // YENİ METOT: TCP/IP ayarlarını tamamen varsayılana döndürür.
+        /// <summary>
+        /// SQL Server TCP/IP protokolünü devre dışı bırakır, port ayarlarını sıfırlar ve servisi yeniden başlatır.
+        /// </summary>
+        public static void RevertTcpIpAndRestartService(string instanceName, Action<string> logAction)
+        {
+            string instanceId = GetInstanceIdFromInstanceName(instanceName);
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                throw new Exception($"'{instanceName}' için örnek ID'si (Instance ID) bulunamadı.");
+            }
+
+            string tcpKeyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer\SuperSocketNetLib\Tcp";
+            using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+            {
+                // 1. TCP/IP Protokolünü devre dışı bırak
+                using (var key = hklm.OpenSubKey(tcpKeyPath, true))
+                {
+                    if (key == null) throw new Exception("TCP/IP için Registry anahtarı bulunamadı.");
+                    key.SetValue("Enabled", 0, RegistryValueKind.DWord);
+                    logAction("SQL Server TCP/IP protokolü devre dışı bırakıldı.");
+                }
+
+                // 2. Port ayarlarını sıfırla (dinamik hale getir)
+                string ipAllKeyPath = tcpKeyPath + @"\IPAll";
+                using (var keyIpAll = hklm.OpenSubKey(ipAllKeyPath, true))
+                {
+                    if (keyIpAll == null) throw new Exception("TCP/IP 'IPAll' ayarları bulunamadı.");
+                    keyIpAll.SetValue("TcpDynamicPorts", "0", RegistryValueKind.String); // Dinamik portu tekrar 0 yap
+                    keyIpAll.SetValue("TcpPort", "", RegistryValueKind.String);           // Sabit portu temizle
+                    logAction("TCP/IP port ayarları varsayılana (dinamik) döndürüldü.");
+                }
+            }
+
+            // 3. Değişikliklerin geçerli olması için servisi yeniden başlat
+            string serviceName = GetSqlServiceName(instanceName);
+            logAction($"'{serviceName}' servisi yeniden başlatılıyor...");
+            ServiceController service = new ServiceController(serviceName);
+            if (service.Status != ServiceControllerStatus.Stopped)
+            {
+                service.Stop();
+                service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+            }
+            service.Start();
+            service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
+            logAction($"'{serviceName}' servisi başarıyla yeniden başlatıldı.");
         }
     }
 }
