@@ -82,26 +82,20 @@ namespace ProjectInstaller
                             Log($"Genel IP Adresiniz Bulundu: {publicIp}");
                         }
 
-                        // Adım 1: Mixed Mode Authentication ayarlanıyor
                         SqlConfigurationHelper.SetMixedModeAuthentication(userForm.SelectedInstance, Log);
 
-                        // Adım 2: Kullanıcı oluşturma
                         SqlConfigurationHelper.CreateSqlUser(userForm.SelectedInstance, userForm.SelectedDatabase, userForm.Username, userForm.Password);
                         Log($"'{userForm.Username}' kullanıcısı başarıyla oluşturuldu.");
 
-                        // Adım 3: TCP/IP açılıyor, port 1433'e sabitleniyor ve servis yeniden başlatılıyor
                         SqlConfigurationHelper.ConfigureTcpIpAndRestartService(userForm.SelectedInstance, Log);
 
-                        // Adım 4: Güvenlik duvarı kuralları ekleniyor
                         Log("Güvenlik duvarı kuralları oluşturuluyor...");
                         SqlConfigurationHelper.OpenFirewallPort("SQL Server (TCP-1433)", 1433, Log);
 
-                        // DÜZELTME: EKSİK OLAN UDP KURALI EKLENDİ!
                         SqlConfigurationHelper.OpenFirewallPort("SQL Server Browser (UDP-1434)", 1434, Log, "UDP");
 
                         Log("\n>>> BİLGİSAYAR AYARLARI BAŞARIYLA TAMAMLANDI! <<<");
 
-                        // ... (Geri kalan bilgilendirme kısmı aynı kalabilir) ...
                         Log("\n--- Bağlantı Bilgileri ---");
                         Log($"Yerel IP Adresiniz: {localIp}");
                         if (accessType == AccessType.WanAccess) Log($"Genel (Public) IP Adresiniz: {publicIp}");
@@ -160,7 +154,6 @@ namespace ProjectInstaller
                     {
                         string instance = userForm.SelectedInstance;
 
-                        // GÜNCELLENDİ: "Yapılandırmayı Kaldır" seçildiğinde tüm ayarları geri al
                         if (removalType == RemovalType.FullConfig)
                         {
                             Log("Güvenlik duvarı kuralları kaldırılıyor...");
@@ -176,7 +169,6 @@ namespace ProjectInstaller
                             Log("Tüm sunucu yapılandırması başarıyla varsayılan haline getirildi.");
                         }
 
-                        // Sadece kullanıcı silme modundaysa kullanıcıyı sil
                         if (removalType == RemovalType.UserOnly)
                         {
                             string db = userForm.SelectedDatabase;

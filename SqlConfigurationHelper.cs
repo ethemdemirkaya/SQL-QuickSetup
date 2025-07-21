@@ -153,7 +153,6 @@ namespace ProjectInstaller
             logAction($"'{serviceName}' servisi başarıyla yeniden başlatıldı.");
         }
 
-        // GÜNCELLENDİ: Metot artık protokol türünü de alabiliyor (TCP veya UDP).
         /// <summary>
         /// Windows Güvenlik Duvarı'nda belirtilen port ve protokol için gelen kuralı oluşturur.
         /// </summary>
@@ -168,7 +167,6 @@ namespace ProjectInstaller
                 Type fwPolicy2Type = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
                 INetFwPolicy2 fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(fwPolicy2Type);
 
-                // Kural daha önce var mı diye kontrol et
                 foreach (INetFwRule rule in fwPolicy2.Rules)
                 {
                     if (rule.Name == ruleName)
@@ -184,7 +182,6 @@ namespace ProjectInstaller
                 newRule.Name = ruleName;
                 newRule.Description = $"SQL Server için {protocol} port erişimi (Otomatik oluşturuldu).";
 
-                // Gelen protokole göre doğru değeri ata
                 if (protocol.ToUpper() == "UDP")
                 {
                     newRule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
@@ -337,7 +334,6 @@ namespace ProjectInstaller
                 }
             }
         }
-        // YENİ METOT: Bilgisayarın aktif LAN IP adresini bulur.
         /// <summary>
         /// Bilgisayarın aktif ve çalışan (Wireless veya Ethernet) ağ bağdaştırıcısının IPv4 adresini bulur.
         /// </summary>
@@ -361,16 +357,14 @@ namespace ProjectInstaller
                     }
                 }
             }
-            catch { /* Hata durumunda fallback'e devam et */ }
+            catch {}
 
-            // Fallback yöntemi
             return Dns.GetHostEntry(Dns.GetHostName())
                       .AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?
                       .ToString() ?? "127.0.0.1";
         }
 
 
-        // YENİ METOT: SQL Server kimlik doğrulama modunu Mixed Mode'a ayarlar.
         /// <summary>
         /// Belirtilen SQL Server örneğinin kimlik doğrulama modunu 'SQL Server and Windows Authentication (Mixed Mode)' olarak ayarlar.
         /// </summary>
@@ -384,17 +378,15 @@ namespace ProjectInstaller
 
             string keyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer";
             using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
-            using (var key = hklm.OpenSubKey(keyPath, true)) // Yazma izniyle aç
+            using (var key = hklm.OpenSubKey(keyPath, true)) 
             {
                 if (key == null) throw new Exception("SQL Server için Registry anahtarı bulunamadı.");
 
-                // LoginMode = 1 (Windows Auth Only), LoginMode = 2 (Mixed Mode)
                 key.SetValue("LoginMode", 2, RegistryValueKind.DWord);
                 logAction("SQL Server kimlik doğrulama modu 'Mixed Mode' olarak ayarlandı.");
             }
         }
 
-        // GÜNCELLENDİ: Metodun adı ve işlevi genişletildi. Artık portu 1433'e sabitliyor.
         /// <summary>
         /// SQL Server TCP/IP protokolünü aktifleştirir, portu 1433'e sabitler ve ilgili servisi yeniden başlatır.
         /// </summary>
@@ -409,7 +401,6 @@ namespace ProjectInstaller
             string tcpKeyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer\SuperSocketNetLib\Tcp";
             using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
             {
-                // 1. TCP/IP Protokolünü etkinleştir
                 using (var key = hklm.OpenSubKey(tcpKeyPath, true))
                 {
                     if (key == null) throw new Exception("TCP/IP için Registry anahtarı bulunamadı.");
@@ -417,18 +408,16 @@ namespace ProjectInstaller
                     logAction("SQL Server TCP/IP protokolü aktifleştirildi.");
                 }
 
-                // 2. Dinamik portları kapatıp portu 1433'e sabitle
                 string ipAllKeyPath = tcpKeyPath + @"\IPAll";
                 using (var keyIpAll = hklm.OpenSubKey(ipAllKeyPath, true))
                 {
                     if (keyIpAll == null) throw new Exception("TCP/IP 'IPAll' ayarları bulunamadı.");
-                    keyIpAll.SetValue("TcpDynamicPorts", "", RegistryValueKind.String); // Dinamik portu boşalt
-                    keyIpAll.SetValue("TcpPort", "1433", RegistryValueKind.String);     // Sabit portu 1433 yap
+                    keyIpAll.SetValue("TcpDynamicPorts", "", RegistryValueKind.String);
+                    keyIpAll.SetValue("TcpPort", "1433", RegistryValueKind.String); 
                     logAction("TCP/IP portu 1433 olarak sabitlendi. Dinamik portlar kapatıldı.");
                 }
             }
 
-            // 3. Değişikliklerin geçerli olması için servisi yeniden başlat
             string serviceName = GetSqlServiceName(instanceName);
             logAction($"'{serviceName}' servisi yeniden başlatılıyor...");
             ServiceController service = new ServiceController(serviceName);
@@ -441,7 +430,6 @@ namespace ProjectInstaller
             service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
             logAction($"'{serviceName}' servisi başarıyla yeniden başlatıldı.");
         }
-        // YENİ METOT: Kimlik doğrulama modunu sadece Windows'a geri çevirir.
         /// <summary>
         /// Belirtilen SQL Server örneğinin kimlik doğrulama modunu 'Windows Authentication Only' olarak ayarlar.
         /// </summary>
@@ -459,13 +447,11 @@ namespace ProjectInstaller
             {
                 if (key == null) throw new Exception("SQL Server için Registry anahtarı bulunamadı.");
 
-                // LoginMode = 1 (Windows Auth Only)
                 key.SetValue("LoginMode", 1, RegistryValueKind.DWord);
                 logAction("SQL Server kimlik doğrulama modu 'Windows Authentication Only' olarak ayarlandı.");
             }
         }
 
-        // YENİ METOT: TCP/IP ayarlarını tamamen varsayılana döndürür.
         /// <summary>
         /// SQL Server TCP/IP protokolünü devre dışı bırakır, port ayarlarını sıfırlar ve servisi yeniden başlatır.
         /// </summary>
@@ -480,7 +466,6 @@ namespace ProjectInstaller
             string tcpKeyPath = $@"SOFTWARE\Microsoft\Microsoft SQL Server\{instanceId}\MSSQLServer\SuperSocketNetLib\Tcp";
             using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
             {
-                // 1. TCP/IP Protokolünü devre dışı bırak
                 using (var key = hklm.OpenSubKey(tcpKeyPath, true))
                 {
                     if (key == null) throw new Exception("TCP/IP için Registry anahtarı bulunamadı.");
@@ -488,13 +473,12 @@ namespace ProjectInstaller
                     logAction("SQL Server TCP/IP protokolü devre dışı bırakıldı.");
                 }
 
-                // 2. Port ayarlarını sıfırla (dinamik hale getir)
                 string ipAllKeyPath = tcpKeyPath + @"\IPAll";
                 using (var keyIpAll = hklm.OpenSubKey(ipAllKeyPath, true))
                 {
                     if (keyIpAll == null) throw new Exception("TCP/IP 'IPAll' ayarları bulunamadı.");
-                    keyIpAll.SetValue("TcpDynamicPorts", "0", RegistryValueKind.String); // Dinamik portu tekrar 0 yap
-                    keyIpAll.SetValue("TcpPort", "", RegistryValueKind.String);           // Sabit portu temizle
+                    keyIpAll.SetValue("TcpDynamicPorts", "0", RegistryValueKind.String); 
+                    keyIpAll.SetValue("TcpPort", "", RegistryValueKind.String);          
                     logAction("TCP/IP port ayarları varsayılana (dinamik) döndürüldü.");
                 }
             }
