@@ -67,9 +67,14 @@ namespace ProjectInstaller
                 {
                     this.Cursor = Cursors.WaitCursor;
                     string publicIp = "N/A";
+                    string localIp = "N/A";
 
                     try
                     {
+                        Log("Yerel IP adresi alınıyor...");
+                        localIp = SqlConfigurationHelper.GetLocalIpAddress();
+                        Log($"Yerel IP Adresiniz Bulundu: {localIp}");
+
                         if (accessType == AccessType.WanAccess)
                         {
                             Log("Genel (Public) IP adresi alınıyor...");
@@ -77,42 +82,50 @@ namespace ProjectInstaller
                             Log($"Genel IP Adresiniz Bulundu: {publicIp}");
                         }
 
+                        // Adım 1: Mixed Mode Authentication ayarlanıyor
+                        SqlConfigurationHelper.SetMixedModeAuthentication(userForm.SelectedInstance, Log);
+
+                        // Adım 2: Kullanıcı oluşturma
                         SqlConfigurationHelper.CreateSqlUser(userForm.SelectedInstance, userForm.SelectedDatabase, userForm.Username, userForm.Password);
                         Log($"'{userForm.Username}' kullanıcısı başarıyla oluşturuldu.");
 
-                        SqlConfigurationHelper.EnableTcpIpAndRestartService(userForm.SelectedInstance, Log);
+                        // Adım 3: TCP/IP açılıyor, port 1433'e sabitleniyor ve servis yeniden başlatılıyor
+                        SqlConfigurationHelper.ConfigureTcpIpAndRestartService(userForm.SelectedInstance, Log);
 
-                        if (accessType == AccessType.WanAccess)
-                        {
-                            SqlConfigurationHelper.OpenFirewallPort("SQL Server (TCP-1433)", 1433, Log);
-                        }
+                        // Adım 4: Güvenlik duvarı kuralları ekleniyor
+                        Log("Güvenlik duvarı kuralları oluşturuluyor...");
+                        SqlConfigurationHelper.OpenFirewallPort("SQL Server (TCP-1433)", 1433, Log);
+
+                        // DÜZELTME: EKSİK OLAN UDP KURALI EKLENDİ!
+                        SqlConfigurationHelper.OpenFirewallPort("SQL Server Browser (UDP-1434)", 1434, Log, "UDP");
 
                         Log("\n>>> BİLGİSAYAR AYARLARI BAŞARIYLA TAMAMLANDI! <<<");
 
+                        // ... (Geri kalan bilgilendirme kısmı aynı kalabilir) ...
                         Log("\n--- Bağlantı Bilgileri ---");
-                        Log($"Sunucu Adı (Data Source): {userForm.SelectedInstance}");
-                        Log($"Veritabanı (Initial Catalog): {userForm.SelectedDatabase}");
-                        Log($"Kullanıcı Adı (User ID): {userForm.Username}");
-                        Log($"Şifre (Password): {userForm.Password}");
+                        Log($"Yerel IP Adresiniz: {localIp}");
+                        if (accessType == AccessType.WanAccess) Log($"Genel (Public) IP Adresiniz: {publicIp}");
+                        Log($"Veritabanı: {userForm.SelectedDatabase}");
+                        Log($"Kullanıcı Adı: {userForm.Username}");
+                        Log($"Şifre: {userForm.Password}");
                         Log("------------------------------------");
 
                         Log("\n--- NASIL BAĞLANILIR? ---");
-                        Log("1) YEREL AĞDAN (LAN) BAĞLANTI İÇİN KULLANILACAK BAĞLANTI DİZESİ:");
-                        memoLog.AppendText($"   Data Source={userForm.SelectedInstance};Initial Catalog={userForm.SelectedDatabase};User ID={userForm.Username};Password={userForm.Password};\n");
+                        Log("1) YEREL AĞDAN (LAN) BAĞLANTI İÇİN (Aynı Wi-Fi/Kablolu Ağ):");
+                        memoLog.AppendText($"   Data Source={localIp},1433;Initial Catalog={userForm.SelectedDatabase};User ID={userForm.Username};Password={userForm.Password};TrustServerCertificate=True;\n");
 
                         if (accessType == AccessType.WanAccess)
                         {
                             memoLog.AppendText(Environment.NewLine);
-                            Log("2) İNTERNET ÜZERİNDEN (WAN) BAĞLANTI İÇİN YAPILMASI GEREKENLER:");
-                            Log("   ADIM 1: Modem/Router arayüzünüze girip 'Port Yönlendirme' (Port Forwarding) yapmalısınız.");
-                            Log($"           Kural: Dış TCP Port 1433 -> Bu bilgisayarın yerel IP'sine yönlendirilecek.");
-                            Log("   ADIM 2: Aşağıdaki bağlantı dizesini kullanın. (Public IP adresiniz otomatik olarak eklendi)");
-                            memoLog.AppendText($"   Data Source={publicIp},1433;Initial Catalog={userForm.SelectedDatabase};User ID={userForm.Username};Password={userForm.Password};\n\n");
-                            Log("   ÖNEMLİ UYARI: İnternet IP adresiniz zamanla değişebilir (Dinamik IP). Bağlantınız koparsa, bu programı tekrar çalıştırıp yeni IP'nizi öğrenebilirsiniz.");
-                            Log("                Kalıcı bir çözüm için 'Dynamic DNS' (DDNS) servislerini (örn: No-IP, Dynu) araştırmanız önerilir.");
+                            Log("2) İNTERNET ÜZERİNDEN (WAN) BAĞLANTI İÇİN:");
+                            Log("   ADIM 1: Modeminizden 'Port Yönlendirme' (Port Forwarding) yapmalısınız.");
+                            Log($"           Kural: Dış TCP Port 1433 -> {localIp} adresine yönlendirilecek.");
+                            Log("   ADIM 2: Aşağıdaki bağlantı dizesini kullanın:");
+                            memoLog.AppendText($"   Data Source={publicIp},1433;Initial Catalog={userForm.SelectedDatabase};User ID={userForm.Username};Password={userForm.Password};TrustServerCertificate=True;\n\n");
+                            Log("   UYARI: İnternet IP'niz zamanla değişebilir. Kalıcı çözüm için 'Dynamic DNS' servislerini araştırın.");
                         }
 
-                        XtraMessageBox.Show("Yapılandırma başarıyla tamamlandı!\nBağlantı bilgileri ve nasıl bağlanılacağı işlem günlüğüne yazıldı.", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        XtraMessageBox.Show("Yapılandırma başarıyla tamamlandı!", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
@@ -124,13 +137,8 @@ namespace ProjectInstaller
                         this.Cursor = Cursors.Default;
                     }
                 }
-                else
-                {
-                    Log("Yapılandırma işlemi iptal edildi.");
-                }
             }
         }
-
         private void StartRemovalProcess(RemovalType removalType)
         {
             memoLog.Text = "";
@@ -151,21 +159,28 @@ namespace ProjectInstaller
                     try
                     {
                         string instance = userForm.SelectedInstance;
-                        string db = userForm.SelectedDatabase;
-                        string user = userForm.Username;
 
+                        // GÜNCELLENDİ: "Yapılandırmayı Kaldır" seçildiğinde tüm ayarları geri al
                         if (removalType == RemovalType.FullConfig)
                         {
-                            Log("Güvenlik duvarı kuralı kaldırılıyor...");
+                            Log("Güvenlik duvarı kuralları kaldırılıyor...");
                             SqlConfigurationHelper.RemoveFirewallRule("SQL Server (TCP-1433)", Log);
+                            SqlConfigurationHelper.RemoveFirewallRule("SQL Server Browser (UDP-1434)", Log);
 
-                            Log("SQL Server ağ ayarları geri alınıyor...");
-                            SqlConfigurationHelper.DisableTcpIpAndRestartService(instance, Log);
-                            Log("Ağ yapılandırması başarıyla kaldırıldı.");
+                            Log("SQL Server kimlik doğrulama modu geri alınıyor...");
+                            SqlConfigurationHelper.SetWindowsAuthOnlyMode(instance, Log);
+
+                            Log("SQL Server ağ ayarları varsayılana döndürülüyor...");
+                            SqlConfigurationHelper.RevertTcpIpAndRestartService(instance, Log);
+
+                            Log("Tüm sunucu yapılandırması başarıyla varsayılan haline getirildi.");
                         }
 
+                        // Sadece kullanıcı silme modundaysa kullanıcıyı sil
                         if (removalType == RemovalType.UserOnly)
                         {
+                            string db = userForm.SelectedDatabase;
+                            string user = userForm.Username;
                             Log($"'{user}' kullanıcısı ve oturumu siliniyor...");
                             SqlConfigurationHelper.DropSqlUserAndLogin(instance, db, user);
                             Log("Kullanıcı ve oturum başarıyla silindi.");
