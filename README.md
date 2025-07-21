@@ -1,9 +1,8 @@
 <div align="right">
   <b><a href="README.tr.md">Türkçe</a></b>
 </div>
-# SQL-QuickSetup
 
- <!-- You can add a logo URL here -->
+# SQL-QuickSetup
 
 **SQL-QuickSetup** is a Windows automation tool designed to quickly and easily configure Microsoft SQL Server for access over a Local Area Network (LAN) and the Internet (WAN). It aims to simplify the SQL Server configuration process, especially for developers, small offices, or test environments.
 
